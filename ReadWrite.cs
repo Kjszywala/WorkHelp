@@ -90,19 +90,22 @@ namespace PrinterHelper
 
     /// <summary>
     /// Class reads events from a printer.
+    /// Pass the printer ip to the object.
     /// </summary>
     class ReadEvents : BaseThread
     {
-        public ReadEvents()
+        public string ip { get; set; }
+        public ReadEvents(string _ip)
             : base()
         {
+            this.ip = _ip;
         }
 
         public override void RunThread()
         {
             while (true)
             {
-                TcpClient client = new TcpClient("10.101.111.16", 9140);
+                TcpClient client = new TcpClient(ip, 9140);
                 NetworkStream stream = client.GetStream();
                 var Data = new Byte[1024];
                 Int32 bytes = stream.Read(Data, 0, Data.Length);
@@ -111,7 +114,7 @@ namespace PrinterHelper
                 {
                     continue;
                 }
-                Console.WriteLine(response); 
+                Console.WriteLine(response.Trim()); 
             }
         }
     }
@@ -122,7 +125,6 @@ namespace PrinterHelper
     abstract class BaseThread
     {
         private Thread _thread;
-
         protected BaseThread()
         {
             _thread = new Thread(new ThreadStart(this.RunThread));
