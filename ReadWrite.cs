@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace PrinterHelper
 {
@@ -50,7 +51,7 @@ namespace PrinterHelper
             TcpClient client = new TcpClient(ip, 9100);
             NetworkStream stream = client.GetStream();
 
-            Byte[] Data = Header.Concat(crc32).ToArray(); 
+            Byte[] Data = Header.Concat(crc32).ToArray();
             stream.Write(Data, 0, Data.Length);
 
             Data = new Byte[1024];
@@ -79,11 +80,60 @@ namespace PrinterHelper
                 line.Trim();
                 if (line.Contains($"{setting}"))
                 {
-                    var source = line.Split('>','<');
+                    var source = line.Split('>', '<');
                     value = source[2];
                 }
             }
             return value;
         }
+    }
+
+    /// <summary>
+    /// Class reads events from a printer.
+    /// </summary>
+    class ReadEvents : BaseThread
+    {
+        public ReadEvents()
+            : base()
+        {
+        }
+
+        public override void RunThread()
+        {
+            while (true)
+            {
+                TcpClient client = new TcpClient("10.101.111.16", 9140);
+                NetworkStream stream = client.GetStream();
+                var Data = new Byte[1024];
+                Int32 bytes = stream.Read(Data, 0, Data.Length);
+                string response = System.Text.Encoding.UTF8.GetString(Data, 0, bytes);
+                if (string.IsNullOrEmpty(response))
+                {
+                    continue;
+                }
+                Console.WriteLine(response); 
+            }
+        }
+    }
+
+    /// <summary>
+    /// Helper class to define thread.
+    /// </summary>
+    abstract class BaseThread
+    {
+        private Thread _thread;
+
+        protected BaseThread()
+        {
+            _thread = new Thread(new ThreadStart(this.RunThread));
+        }
+
+        // Thread methods / properties
+        public void Start() => _thread.Start();
+        public void Join() => _thread.Join();
+        public bool IsAlive => _thread.IsAlive;
+
+        // Override in base class
+        public abstract void RunThread();
     }
 }
