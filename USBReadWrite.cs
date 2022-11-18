@@ -10,8 +10,9 @@ namespace USB
     {
         #region Variables
         public string SerialNumber { get; set; }
-        public Int32 ProductId1 { get; set; }// = 0x0001;
-        public Int32 VendorId1 { get; set; }// = 0x0C1F;
+        public Int32 _ProductId { get; set; }// = 0x0001;
+        public Int32 _VendorId { get; set; }// = 0x0C1F;
+        private string devicePath = "";
         #endregion
 
         #region Constructor
@@ -38,13 +39,18 @@ namespace USB
 
                 var usbDeviceCollection = context.List();
 
-                var switchUsbDevice = usbDeviceCollection.FirstOrDefault(d => d.ProductId == ProductId1 && d.VendorId == VendorId1);
+                var switchUsbDevice = usbDeviceCollection.FirstOrDefault(d => d.ProductId == _ProductId && d.VendorId == _VendorId);
 
                 if (switchUsbDevice != null)
+                {
                     switchUsbDevice.Open();
+                }
                 else
+                {
+                    Console.WriteLine("Cannot connect to device.");
                     return;
-
+                }
+                    
                 switchUsbDevice.ClaimInterface(switchUsbDevice.Configs[0].Interfaces[0].Number);
 
                 var writeEndpoint = switchUsbDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
@@ -108,7 +114,6 @@ namespace USB
         /// </summary>
         private void setPIDVID()
         {
-            string devicePath = "";
             var list = GetUSBDevices();
             foreach(var device in list)
             {
@@ -123,11 +128,11 @@ namespace USB
             }
             string[] lines = devicePath.Split('_','_');
 
-#pragma warning disable CS8605 // Unboxing a possibly null value.
-            VendorId1 = Int32.Parse(lines[1].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
-            ProductId1 = Int32.Parse(lines[2].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
-#pragma warning restore CS8605 // Unboxing a possibly null value.
+            _VendorId = Int32.Parse(lines[1].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
+            _ProductId = Int32.Parse(lines[2].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
+
         }
+
         /// <summary>
         /// List of all USB devices.
         /// </summary>
@@ -149,6 +154,24 @@ namespace USB
 #pragma warning restore CA1416 // Validate platform compatibility
             return devices;
         }
+
+        /// <summary>
+        /// Install or uninstall filter on usb device. 
+        /// </summary>
+        /// <param name="param">install or uninstall</param>
+        /// <param name="usbPath">Path to usb device</param>
+        private void setFilter(string param, string usbPath)
+        {
+            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.WorkingDirectory = "C:\\Program Files\\LibUSB-Win32\\bin\\";
+            startInfo.FileName = "cmd.exe";
+            startInfo.Arguments = $"/C install-filter {param} \"--device={usbPath}\"";
+            process.StartInfo = startInfo;
+            process.Start();
+        }
+
         #endregion
     }
 
