@@ -4,20 +4,21 @@ using LibUsbDotNet.Main;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Trial2
+namespace USB
 {
     public class USBReadWrite
     {
         #region Variables
-        public string PrinterName { get; set; }
-        public Int32 _ProductId { get; set; }
-        public Int32 _VendorId { get; set; }
+        public string SerialNumber { get; set; }
+        public Int32 ProductId1 { get; set; }// = 0x0001;
+        public Int32 VendorId1 { get; set; }// = 0x0C1F;
         #endregion
 
         #region Constructor
-        public USBReadWrite(string printerName)
+        public USBReadWrite(string serialNumber)
         {
-            PrinterName = printerName;
+            SerialNumber = serialNumber;
+            setPIDVID();
         }
         #endregion
 
@@ -25,7 +26,11 @@ namespace Trial2
         [DllImport("Libraries/CRC32.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint calculateCRC32(byte[] buffer, int length);
 
-        public void WriteRead(string setting)
+        /// <summary>
+        /// Reads the value from the printer.
+        /// </summary>
+        /// <param name="setting">Printer</param>
+        public void Read(string setting)
         {
             using (var context = new UsbContext())
             {
@@ -33,7 +38,7 @@ namespace Trial2
 
                 var usbDeviceCollection = context.List();
 
-                var switchUsbDevice = usbDeviceCollection.FirstOrDefault(d => d.ProductId == 0x0001 && d.VendorId == 0x0C1F);
+                var switchUsbDevice = usbDeviceCollection.FirstOrDefault(d => d.ProductId == ProductId1 && d.VendorId == VendorId1);
 
                 if (switchUsbDevice != null)
                     switchUsbDevice.Open();
@@ -74,6 +79,12 @@ namespace Trial2
             }
         }
 
+        /// <summary>
+        /// Reads the value from XML. Used in Read() method.
+        /// </summary>
+        /// <param name="xml"></param>
+        /// <param name="setting"></param>
+        /// <returns>XML value</returns>
         public string readValue(string xml, string setting)
         {
             string[] lines = xml.Split('\n');
@@ -91,6 +102,65 @@ namespace Trial2
             }
             return value;
         }
+
+        /// <summary>
+        /// Set the Product Id and Vendor Id.
+        /// </summary>
+        private void setPIDVID()
+        {
+            string devicePath = "";
+            var list = GetUSBDevices();
+            foreach(var device in list)
+            {
+                if (device.DeviceID.Contains(SerialNumber))
+                {
+                    devicePath = device.DeviceID;
+                }
+            }
+            if(string.IsNullOrWhiteSpace(devicePath))
+            {
+                Console.WriteLine("No device in the list contain this serial number.");
+            }
+            string[] lines = devicePath.Split('_','_');
+
+#pragma warning disable CS8605 // Unboxing a possibly null value.
+            VendorId1 = Int32.Parse(lines[1].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
+            ProductId1 = Int32.Parse(lines[2].Substring(0, 4),System.Globalization.NumberStyles.HexNumber);
+#pragma warning restore CS8605 // Unboxing a possibly null value.
+        }
+        /// <summary>
+        /// List of all USB devices.
+        /// </summary>
+        /// <returns>List of USB devices</returns>
+        static List<USBDeviceInfo> GetUSBDevices()
+        {
+            List<USBDeviceInfo> devices = new List<USBDeviceInfo>();
+            ManagementObjectCollection collection;
+#pragma warning disable CA1416 // Validate platform compatibility
+            //Win32_USBHub can give us a list of USB contollers while Win32_PnPEntity shows all devices
+            using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub where DeviceID Like ""USB%"""))
+                collection = searcher.Get();
+
+            foreach (var device in collection)
+            {
+                devices.Add(new USBDeviceInfo((string)device.GetPropertyValue("DeviceID")));
+            }
+            collection.Dispose();
+#pragma warning restore CA1416 // Validate platform compatibility
+            return devices;
+        }
         #endregion
+    }
+
+    /// <summary>
+    /// Class which holds Device Id for our printer.
+    /// </summary>
+    class USBDeviceInfo
+    {
+        public USBDeviceInfo(string deviceID)
+        {
+            this.DeviceID = deviceID;
+        }
+        public string DeviceID { get; private set; }
     }
 }
