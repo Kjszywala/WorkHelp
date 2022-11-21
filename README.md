@@ -16,12 +16,9 @@ You can use setFilter(“uninstall”, devicePath) for it or do it manually.
 
 If you do it automatically you need to add the app.manifest to your project and
 in the file change:
-
 requestedExecutionLevel level="asInvoker" uiAccess="false" 
-
 to
-
-<requestedExecutionLevel level="requireAdministrator" uiAccess="false" 
+requestedExecutionLevel level="requireAdministrator" uiAccess="false" 
 
 The LibUsb-Win32 should be installed in:
 C:/Program Files/LibUSB-Win32/ 
