@@ -1,10 +1,11 @@
 using LibUsbDotNet;
 using LibUsbDotNet.LibUsb;
 using LibUsbDotNet.Main;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace USB
+namespace Trial2
 {
     public class USBReadWrite
     {
@@ -20,6 +21,7 @@ namespace USB
         {
             SerialNumber = serialNumber;
             setPIDVID();
+            setFilter("install", devicePath);
         }
         #endregion
 
@@ -47,7 +49,7 @@ namespace USB
                 }
                 else
                 {
-                    Console.WriteLine("Cannot connect to device.");
+                    Console.WriteLine("Cannot find device.");
                     return;
                 }
                     
@@ -106,6 +108,7 @@ namespace USB
                     value = source[2];
                 }
             }
+            setFilter("uninstall", devicePath);
             return value;
         }
 
@@ -165,7 +168,14 @@ namespace USB
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.WorkingDirectory = "C:\\Program Files\\LibUSB-Win32\\bin\\";
+            try
+            {
+                startInfo.WorkingDirectory = "C:\\Program Files\\LibUSB-Win32\\bin\\";
+            }
+            catch
+            {
+                Console.WriteLine("Cannot find the install-filter.exe in\nC:\\Program Files\\LibUSB-Win32\\bin\\");
+            }
             startInfo.FileName = "cmd.exe";
             startInfo.Arguments = $"/C install-filter {param} \"--device={usbPath}\"";
             process.StartInfo = startInfo;
