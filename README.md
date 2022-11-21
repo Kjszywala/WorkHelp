@@ -14,6 +14,12 @@ setFilter(“install”, devicePath) method in the constructor of the USBReadWri
 Remember to uninstall the filter after using so the driver can see your device.
 You can use setFilter(“uninstall”, devicePath) for it or do it manually.
 
+If you do it automatically you need to add the app.manifest to your project and
+in the file change:
+<requestedExecutionLevel level="asInvoker" uiAccess="false" />
+to
+<requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+
 The LibUsb-Win32 should be installed in:
 C:/Program Files/LibUSB-Win32/ 
 so, the bin folder should be in:
