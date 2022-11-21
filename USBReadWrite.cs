@@ -21,7 +21,7 @@ namespace Trial2
         {
             SerialNumber = serialNumber;
             setPIDVID();
-            setFilter("install", devicePath);
+            //setFilter("install", devicePath);
         }
         #endregion
 
@@ -108,7 +108,7 @@ namespace Trial2
                     value = source[2];
                 }
             }
-            setFilter("uninstall", devicePath);
+            //setFilter("uninstall", devicePath);
             return value;
         }
 
@@ -144,7 +144,7 @@ namespace Trial2
         {
             List<USBDeviceInfo> devices = new List<USBDeviceInfo>();
             ManagementObjectCollection collection;
-#pragma warning disable CA1416 // Validate platform compatibility
+#pragma warning disable CA1416 // Validate platform compatibility.
             //Win32_USBHub can give us a list of USB contollers while Win32_PnPEntity shows all devices
             using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub where DeviceID Like ""USB%"""))
                 collection = searcher.Get();
@@ -154,7 +154,7 @@ namespace Trial2
                 devices.Add(new USBDeviceInfo((string)device.GetPropertyValue("DeviceID")));
             }
             collection.Dispose();
-#pragma warning restore CA1416 // Validate platform compatibility
+#pragma warning restore CA1416 // Validate platform compatibility.
             return devices;
         }
 
@@ -181,7 +181,6 @@ namespace Trial2
             process.StartInfo = startInfo;
             process.Start();
         }
-
         #endregion
     }
 
