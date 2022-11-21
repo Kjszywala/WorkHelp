@@ -17,7 +17,8 @@ You can use setFilter(“uninstall”, devicePath) for it or do it manually.
 If you do it automatically you need to add the app.manifest to your project and
 in the file change:
 
-requestedExecutionLevel level="asInvoker" uiAccess="false" 
+requestedExecutionLevel level="asInvoker" uiAccess="false"
+
 to
 
 requestedExecutionLevel level="requireAdministrator" uiAccess="false" 
